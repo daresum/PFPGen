@@ -62,11 +62,11 @@ const LAYERS = [
 ========================== */
 
 function githubRaw(path) {
-  return `https://raw.githubusercontent.com/daresum/PFPGen/main/layers`;
+  return `https://raw.githubusercontent.com/daresum/PFPGen/tree/main/layers`;
 }
 
 async function fetchFileList(folder) {
-  const apiUrl = `https://api.github.com/repos/daresum/PFPGen/layers`;
+  const apiUrl = `https://api.github.com/repos/daresum/PFPGen/tree/main/layers`;
   const res = await fetch(apiUrl);
   const data = await res.json();
   return data.filter(f => f.type === "file").map(f => f.name);
