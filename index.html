@@ -58,10 +58,30 @@ const LAYERS = [
   { name: "background", files: ["blue.png", "green.png", "pink.png"] },
   { name: "base", files: ["base.png"], fixed: true },
   { name: "body", files: ["artist.png", "broken.png"] },
-  { name: "head", files: ["cap.png", "wizard.png"] },
+  { name: "head", files: ["cap.png", "wizard.png", "afro.png"] },
   { name: "mouth", files: ["aaa.png", "car.png"] },
-  { name: "eyes", files: ["agent.png", "anime.png"] }
+  { name: "eyes", files: ["agent.png", "anime.png", "googly.png"] }
 ];
+
+/* ==========================
+   EXCLUSIONS — EDIT HERE
+========================== */
+
+const EXCLUSIONS = [
+  {
+    if: { eyes: "agent.png" },
+    notAllowed: { head: ["afro.png"] }
+  },
+  {
+    if: { head: "cap.png" },
+    notAllowed: { eyes: ["googly.png"] }
+  }
+];
+
+/* ==========================
+   HELPER FUNCTIONS
+========================== */
+
 
 function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -77,23 +97,63 @@ function loadImage(src) {
   });
 }
 
+function violatesExclusion(selection) {
+  for (const rule of EXCLUSIONS) {
+    // Check if all conditions in "if" match
+    let ifMatches = true;
+    for (const [layer, file] of Object.entries(rule.if)) {
+      if (selection[layer] !== file) {
+        ifMatches = false;
+        break;
+      }
+    }
+    if (!ifMatches) continue;
+
+    // If "if" matches, check if any notAllowed files are in the selection
+    for (const [layer, bannedFiles] of Object.entries(rule.notAllowed)) {
+      if (bannedFiles.includes(selection[layer])) {
+        return true; // invalid combination
+      }
+    }
+  }
+
+  return false; // no exclusions violated
+}
+
+/* ==========================
+   GENERATE PFP
+========================== */
+
 async function generatePFP() {
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  let selection = {};
+
+  // Repeat until selection does NOT violate exclusions
+  do {
+    selection = {};
+    for (const layer of LAYERS) {
+      const file = layer.fixed
+        ? layer.files[0]
+        : randomItem(layer.files);
+
+      selection[layer.name] = file;
+    }
+  } while (violatesExclusion(selection));
+
+  // Draw final selection
   for (const layer of LAYERS) {
-    const file = layer.fixed
-      ? layer.files[0]
-      : randomItem(layer.files);
-
-    const img = await loadImage(
-      `${CDN_BASE}/${layer.name}/${file}`
-    );
-
+    const file = selection[layer.name];
+    const img = await loadImage(`${CDN_BASE}/${layer.name}/${file}`);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   }
 }
+
+/* ==========================
+   UI
+========================== */
 
 document.getElementById("generate").addEventListener("click", generatePFP);
 </script>
