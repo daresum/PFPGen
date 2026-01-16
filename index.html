@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PFP Generator Preview</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    button {
+      padding: 14px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    canvas {
+      display: block;
+      margin: 30px auto;
+      width: 320px;
+      height: 320px;
+      border-radius: 12px;
+      background: #222;
+    }
+  </style>
+</head>
+
+<body>
+
+  <button id="generate">Generate</button>
+  <canvas id="canvas" width="2024" height="2024"></canvas>
+
+<script>
+/* ==========================
+   CONFIG
+========================== */
+
+const GITHUB_OWNER = "daresum";
+const GITHUB_REPO = "PFPGen";
+const GITHUB_BRANCH = "main";
+
+/* LAYER DEFINITIONS */
+const LAYERS = [
+  { name: "background", random: true },
+  { name: "base", random: false, file: "base.png" },
+  { name: "body", random: true },
+  { name: "head", random: true },
+  { name: "mouth", random: true },
+  { name: "eyes", random: true }
+];
+
+/* ==========================
+   HELPERSine 
+========================== */
+
+function githubRaw(path) {
+  return `https://raw.githubusercontent.com/daresum/PFPGen/main/layers`;
+}
+
+async function fetchFileList(folder) {
+  const apiUrl = `https://api.github.com/repos/daresum/PFPGen/layers`;
+  const res = await fetch(apiUrl);
+  const data = await res.json();
+  return data.filter(f => f.type === "file").map(f => f.name);
+}
+
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+/* ==========================
+   GENERATION
+========================== */
+
+async function generatePFP() {
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (const layer of LAYERS) {
+    let file;
+
+    if (layer.random) {
+      const files = await fetchFileList(layer.name);
+      file = randomItem(files);
+    } else {
+      file = layer.file;
+    }
+
+    const img = await loadImage(
+      githubRaw(`${layer.name}/${file}`)
+    );
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  }
+}
+
+/* ==========================
+   UI
+========================== */
+
+document.getElementById("generate").addEventListener("click", generatePFP);
+</script>
+
+</body>
+</html>
