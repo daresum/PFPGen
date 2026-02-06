@@ -57,8 +57,10 @@ const CDN_BASE = `https://cdn.jsdelivr.net/gh/daresum/PFPGen/layers`;
 const LAYERS = [
   { name: "background", files: ["blue.png", "green.png", "pink.png"] },
   { name: "base", files: ["base.png"], fixed: true },
-  { name: "body", files: ["artist.png", "broken.png", "built.png", "coat.png", "hands.png", "show.png", "turtleneck.png", "tux.png", "zombie.png"] },
-  { name: "head", files: ["cap.png", "wizard.png", "afro.png", "blonde.png", "cowboy.png", "hair.png", "ketchup.png", "punk.png", "vampire.png", "wizard.png" ] },
+  { name: "body", files: ["artist.png", "broken.png", "built.png", 
+  "coat.png", "hands.png", "show.png", "turtleneck.png", "tux.png", "zombie.png"] },
+  { name: "head", files: ["cap.png", "wizard.png", "afro.png", "blonde.png", 
+  "cowboy.png", "hair.png", "ketchup.png", "punk.png", "vampire.png", "wizard.png" ] },
   { name: "mouth", files: ["baby.png", "braces.png", "bro.png", "bunny.png", "car.png", 
   "cheer.png", "chew.png", "chin.png", "clown.png", "cute.png", "cutesmile.png", 
   "drool.png", "feef.png", "fishlips.png", "flabergasted.png", "froglip.png", "frown.png", 
@@ -82,6 +84,14 @@ const EXCLUSIONS = [
   {
     if: { eyes: "agent.png" },
     notAllowed: { head: ["afro.png"] }
+  },
+  {
+    if: { eyes: "agent.png" },
+    notAllowed: { head: ["afro.png"] }
+  },
+  {
+    if: { eyes: "swirl.png" },
+    notAllowed: { head: ["vampire.png", "hair.png", "afro.png", "blonde.png"] }
   },
   {
     if: { head: "cap.png" },
