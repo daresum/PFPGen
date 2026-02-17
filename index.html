@@ -1,97 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>PFP Generator Preview</title>
+<meta charset="UTF-8" />
+<title>PFP Generator</title>
 
-  <style>
-    body {
-      margin: 0;
-      padding: 40px;
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
-    }
+<style>
+  body {
+    margin: 0;
+    padding: 40px;
+    background: #111;
+    color: #fff;
+    font-family: sans-serif;
+    text-align: center;
+  }
 
-    button {
-      padding: 14px 24px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-    }
+  button {
+    padding: 14px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+  }
 
-    canvas {
-      display: block;
-      margin: 30px auto;
-      width: 640px;
-      height: 640px;
-      border-radius: 12px;
-      background: #222;
-    }
-  </style>
+  canvas {
+    display: block;
+    margin: 30px auto;
+    width: 640px;
+    height: 640px;
+    border-radius: 12px;
+    background: #222;
+  }
+</style>
 </head>
 
 <body>
 
-  <button id="generate">Generate</button>
-  <canvas id="canvas" width="2024" height="2024"></canvas>
+<button id="generate">Generate</button>
+<p id="status">Preloading assets...</p>
+<canvas id="canvas" width="1024" height="1024"></canvas>
 
 <script>
-/* ==========================
-   CONFIG — CHANGE ONLY THESE
-========================== */
-
-const GITHUB_USERNAME = "daresum";
-const GITHUB_REPO = "PFPGen";
-const GITHUB_BRANCH = "main";
 
 /* ==========================
-   DO NOT CHANGE BELOW
+   CDN
 ========================== */
 
-const CDN_BASE = `https://cdn.jsdelivr.net/gh/daresum/PFPGen/layers`;
+const CDN_BASE = "https://cdn.jsdelivr.net/gh/daresum/PFPGen/layers";
 
-/* Layer order = draw order */
+/* ==========================
+   LAYERS
+========================== */
+
 const LAYERS = [
-  { name: "background", files: ["blue.png", "green.png", "pink.png"] },
+  { name: "background", files: ["blue.png","green.png","pink.png"] },
   { name: "base", files: ["base.png"], fixed: true },
-  { name: "body", files: ["artist.png", "broken.png", "built.png", 
-  "coat.png", "hands.png", "show.png", "turtleneck.png", "tux.png", "zombie.png"] },
-  { name: "head", files: ["cap.png", "wizard.png", "afro.png", "blonde.png", 
-  "cowboy.png", "hair.png", "ketchup.png", "punk.png", "vampire.png", "wizard.png" ] },
-  { name: "mouth", files: ["baby.png", "braces.png", "bro.png", "bunny.png", "car.png", 
-  "cheer.png", "chew.png", "chin.png", "clown.png", "cute.png", "cutesmile.png", 
-  "drool.png", "feef.png", "fishlips.png", "flabergasted.png", "froglip.png", "frown.png", 
-  "gb.png", "grind.png", "hm.png", "laugh.png", "line.png", "lips.png", "lipstick.png",
-  "lipsy.png", "lipsy2.png", "longsmile.png", "moustache.png", "nervous.png", "oh.png",
-"old.png", "pika.png", "puff.png", "redbeard.png", "smile.png", "smug.png", "toothless.png",
-"whistle.png", "yell.png", "zombie.png" ] },
-  { name: "eyes", files: ["anime.png", "blank.png", "buttons.png", "cool.png",  
-  "cyclop.png", "eyepatch.png", "fury.png", "glasses.png", "googly.png", 
-  "happy.png", "heavy.png", "holes.png", "jaded.png", "laser.png", "mad.png", 
-  "nerd.png", "note.png", "paranoid.png", "pepe.png", "pure.png", "rule-one.png", 
-  "sleep.png", "sunglasses.png", "surprised.png", "sus.png", "swirl.png",
-  "tear.png", "third-eye.png", "thug.png", "tired.png", "wink.png", "x.png", "yes.png" ] }
+  { name: "body", files: [
+    "artist.png","broken.png","buffed.png","candle.png",
+    "goldchain.png","joe.png","killcheeto.png","leatherjacket.png",
+    "leonidas.png","mets.png","omg.png","rekt.png",
+    "shirt.png","tibbir.png","turtleneck.png",
+    "tux.png","wizzards.png","zombie.png"
+  ]},
+  { name: "head", files: [
+    "cap.png","wizard.png","afro.png","blonde.png",
+    "cowboy.png","dave.png","hair.png","ketchup.png",
+    "mask.png","mchat.png","meebit.png","note.png",
+    "punk.png","tophat.png","vampire.png"
+  ]},
+  { name: "mouth", files: [
+    "baby.png","braces.png","bro.png","bunny.png","car.png",
+    "cheer.png","chew.png","chin.png","clown.png","cute.png",
+    "cutesmile.png","drool.png","feef.png","fishlips.png",
+    "flabergasted.png","froglip.png","frown.png","gb.png",
+    "grind.png","hm.png","laugh.png","line.png","lips.png",
+    "lipstick.png","lipsy.png","lipsy2.png","longsmile.png",
+    "moustache.png","nervous.png","oh.png","old.png","pika.png",
+    "pipe.png","puff.png","redbeard.png","smile.png",
+    "smug.png","toothless.png","whistle.png","yell.png","zombie.png"
+  ]},
+  { name: "eyes", files: [
+    "3dglasses.png","anime.png","blank.png","buttons.png","cool.png",
+    "cyclop.png","eyepatch.png","fury.png","glasses.png","googly.png",
+    "happy.png","heartshape.png","heavy.png","holes.png","jaded.png",
+    "laser.png","mad.png","nerd.png","paranoid.png","pepe.png",
+    "pure.png","rule-one.png","sleep.png","sunglasses.png",
+    "surprised.png","sus.png","swirl.png","tear.png",
+    "third-eye.png","thug.png","tired.png","wink.png","x.png","yes.png"
+  ]}
 ];
 
 /* ==========================
-   EXCLUSIONS — EDIT HERE
+   EXCLUSIONS
 ========================== */
 
 const EXCLUSIONS = [
   {
-    if: { eyes: "agent.png" },
-    notAllowed: { head: ["afro.png"] }
-  },
-  {
-    if: { eyes: "agent.png" },
-    notAllowed: { head: ["afro.png"] }
-  },
-  {
     if: { eyes: "swirl.png" },
-    notAllowed: { head: ["vampire.png", "hair.png", "afro.png", "blonde.png"] }
+    notAllowed: { head: ["vampire.png","hair.png","afro.png","blonde.png"] }
   },
   {
     if: { head: "cap.png" },
@@ -100,50 +105,91 @@ const EXCLUSIONS = [
 ];
 
 /* ==========================
-   HELPER FUNCTIONS
+   PERFORMANCE CACHE
 ========================== */
 
+const IMAGE_CACHE = {};
+
+/* ==========================
+   HELPERS
+========================== */
 
 function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(`Failed to load ${src}`);
-    img.src = src;
-  });
-}
-
 function violatesExclusion(selection) {
   for (const rule of EXCLUSIONS) {
-    // Check if all conditions in "if" match
-    let ifMatches = true;
+    let match = true;
     for (const [layer, file] of Object.entries(rule.if)) {
       if (selection[layer] !== file) {
-        ifMatches = false;
+        match = false;
         break;
       }
     }
-    if (!ifMatches) continue;
+    if (!match) continue;
 
-    // If "if" matches, check if any notAllowed files are in the selection
-    for (const [layer, bannedFiles] of Object.entries(rule.notAllowed)) {
-      if (bannedFiles.includes(selection[layer])) {
-        return true; // invalid combination
+    for (const [layer, banned] of Object.entries(rule.notAllowed)) {
+      if (banned.includes(selection[layer])) {
+        return true;
       }
     }
   }
-
-  return false; // no exclusions violated
+  return false;
 }
 
 /* ==========================
-   GENERATE PFP
+   FACE SUPPRESSION
 ========================== */
+
+function normalizeSelection(selection) {
+  const suppressFace =
+    selection.head === "meebit.png" ||
+    selection.head === "note.png";
+
+  if (suppressFace) {
+    delete selection.eyes;
+    delete selection.mouth;
+  }
+
+  return selection;
+}
+
+/* ==========================
+   PRELOAD ALL IMAGES
+========================== */
+
+async function preloadAll() {
+  const status = document.getElementById("status");
+
+  const promises = [];
+
+  for (const layer of LAYERS) {
+    for (const file of layer.files) {
+      const key = `${layer.name}/${file}`;
+      const src = `${CDN_BASE}/${key}`;
+
+      promises.push(
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            IMAGE_CACHE[key] = img;
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn("Failed:", key);
+            resolve();
+          };
+          img.src = src;
+        })
+      );
+    }
+  }
+
+  await Promise.all(promises);
+  status.innerText = "Ready.";
+}
 
 async function generatePFP() {
   const canvas = document.getElementById("canvas");
@@ -152,32 +198,40 @@ async function generatePFP() {
 
   let selection = {};
 
-  // Repeat until selection does NOT violate exclusions
   do {
     selection = {};
     for (const layer of LAYERS) {
-      const file = layer.fixed
+      selection[layer.name] = layer.fixed
         ? layer.files[0]
         : randomItem(layer.files);
-
-      selection[layer.name] = file;
     }
   } while (violatesExclusion(selection));
 
-  // Draw final selection
+  selection = normalizeSelection(selection);
+
   for (const layer of LAYERS) {
     const file = selection[layer.name];
-    const img = await loadImage(`${CDN_BASE}/${layer.name}/${file}`);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (!file) continue;
+
+    const key = `${layer.name}/${file}`;
+    const img = IMAGE_CACHE[key];
+
+    if (img) {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
   }
+
+  console.log("TRAITS:", selection);
 }
 
 /* ==========================
-   UI
+   INIT
 ========================== */
 
 document.getElementById("generate").addEventListener("click", generatePFP);
-</script>
 
+preloadAll();
+
+</script>
 </body>
 </html>
