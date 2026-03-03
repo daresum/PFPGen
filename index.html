@@ -42,13 +42,13 @@
 <script>
 
 /* ==========================
-   CDN
+CDN
 ========================== */
 
 const CDN_BASE = "https://cdn.jsdelivr.net/gh/daresum/PFPGen/layers";
 
 /* ==========================
-   LAYERS
+LAYERS
 ========================== */
 
 const LAYERS = [
@@ -90,73 +90,76 @@ const LAYERS = [
 ];
 
 /* ==========================
-   EXCLUSIONS
+NEW EXCLUSION ENGINE
 ========================== */
 
-const EXCLUSIONS = [
-  {
-    if: { eyes: "swirl.png" },
-    notAllowed: { head: ["vampire.png","hair.png","afro.png","blonde.png"] }
-  },
-  {
-    if: { head: "cap.png" },
-    notAllowed: { eyes: ["googly.png"] }
+function applyRules(selection) {
+
+  // head/note → remove mouth + eyes
+  if (selection.head === "note.png") {
+    delete selection.mouth;
+    delete selection.eyes;
   }
-];
+
+  if (selection.eyes === "eyepatch.png") {
+    if (["blonde.png","dave.png","afro.png"].includes(selection.head)) return true;
+  }
+
+  if (selection.eyes === "pepe.png" && selection.head === "dave.png") return true;
+  if (selection.eyes === "rule-one.png" && selection.head === "dave.png") return true;
+  if (selection.eyes === "sunglasses.png" && selection.head === "afro.png") return true;
+
+  if (selection.eyes === "3dglasses.png") {
+    if (["afro.png","blonde.png"].includes(selection.head)) return true;
+  }
+
+  if (selection.eyes === "swirl.png") {
+    if (["afro.png","blonde.png"].includes(selection.head)) return true;
+  }
+
+  if (selection.head === "meebit.png") {
+    delete selection.eyes;
+    delete selection.mouth;
+    if (selection.body === "turtleneck.png") return true;
+  }
+
+  if (selection.head === "mask.png") {
+    delete selection.eyes;
+    delete selection.mouth;
+  }
+
+  if (selection.mouth === "redbeard.png") {
+    if ([
+      "rekt.png","leonidas.png","shirt.png",
+      "candle.png","joe.png","omg.png"
+    ].includes(selection.body)) return true;
+
+    if (selection.head === "afro.png") return true;
+  }
+
+  if (selection.mouth === "longsmile.png") {
+    if (["afro.png","blonde.png"].includes(selection.head)) return true;
+  }
+
+  if (selection.mouth === "zombie.png") {
+    if (["joe.png","turtleneck.png"].includes(selection.body)) return true;
+  }
+
+  return false;
+}
 
 /* ==========================
-   PERFORMANCE CACHE
+PERFORMANCE CACHE
 ========================== */
 
 const IMAGE_CACHE = {};
-
-/* ==========================
-   HELPERS
-========================== */
 
 function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function violatesExclusion(selection) {
-  for (const rule of EXCLUSIONS) {
-    let match = true;
-    for (const [layer, file] of Object.entries(rule.if)) {
-      if (selection[layer] !== file) {
-        match = false;
-        break;
-      }
-    }
-    if (!match) continue;
-
-    for (const [layer, banned] of Object.entries(rule.notAllowed)) {
-      if (banned.includes(selection[layer])) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 /* ==========================
-   FACE SUPPRESSION
-========================== */
-
-function normalizeSelection(selection) {
-  const suppressFace =
-    selection.head === "meebit.png" ||
-    selection.head === "note.png";
-
-  if (suppressFace) {
-    delete selection.eyes;
-    delete selection.mouth;
-  }
-
-  return selection;
-}
-
-/* ==========================
-   PRELOAD ALL IMAGES
+PRELOAD
 ========================== */
 
 async function preloadAll() {
@@ -177,10 +180,7 @@ async function preloadAll() {
             IMAGE_CACHE[key] = img;
             resolve();
           };
-          img.onerror = () => {
-            console.warn("Failed:", key);
-            resolve();
-          };
+          img.onerror = () => resolve();
           img.src = src;
         })
       );
@@ -191,12 +191,16 @@ async function preloadAll() {
   status.innerText = "Ready.";
 }
 
+/* ==========================
+GENERATE
+========================== */
+
 async function generatePFP() {
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  let selection = {};
+  let selection;
 
   do {
     selection = {};
@@ -205,9 +209,7 @@ async function generatePFP() {
         ? layer.files[0]
         : randomItem(layer.files);
     }
-  } while (violatesExclusion(selection));
-
-  selection = normalizeSelection(selection);
+  } while (applyRules(selection));
 
   for (const layer of LAYERS) {
     const file = selection[layer.name];
@@ -216,20 +218,17 @@ async function generatePFP() {
     const key = `${layer.name}/${file}`;
     const img = IMAGE_CACHE[key];
 
-    if (img) {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
+    if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   }
 
   console.log("TRAITS:", selection);
 }
 
 /* ==========================
-   INIT
+INIT
 ========================== */
 
 document.getElementById("generate").addEventListener("click", generatePFP);
-
 preloadAll();
 
 </script>
