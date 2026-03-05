@@ -5,31 +5,31 @@
 <title>PFP Generator</title>
 
 <style>
-  body {
-    margin: 0;
-    padding: 40px;
-    background: #111;
-    color: #fff;
-    font-family: sans-serif;
-    text-align: center;
-  }
+body{
+margin:0;
+padding:40px;
+background:#111;
+color:#fff;
+font-family:sans-serif;
+text-align:center;
+}
 
-  button {
-    padding: 14px 24px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-  }
+button{
+padding:14px 24px;
+font-size:16px;
+cursor:pointer;
+border:none;
+border-radius:6px;
+}
 
-  canvas {
-    display: block;
-    margin: 30px auto;
-    width: 640px;
-    height: 640px;
-    border-radius: 12px;
-    background: #222;
-  }
+canvas{
+display:block;
+margin:30px auto;
+width:640px;
+height:640px;
+border-radius:12px;
+background:#222;
+}
 </style>
 </head>
 
@@ -37,6 +37,7 @@
 
 <button id="generate">Generate</button>
 <p id="status">Preloading assets...</p>
+
 <canvas id="canvas" width="1024" height="1024"></canvas>
 
 <script>
@@ -52,183 +53,287 @@ LAYERS
 ========================== */
 
 const LAYERS = [
-  { name: "background", files: ["blue.png","green.png","pink.png"] },
-  { name: "base", files: ["base.png"], fixed: true },
-  { name: "body", files: [
-    "artist.png","broken.png","buffed.png","candle.png",
-    "goldchain.png","joe.png","killcheeto.png","leatherjacket.png",
-    "leonidas.png","mets.png","omg.png","rekt.png",
-    "shirt.png","tibbir.png","turtleneck.png",
-    "tux.png","wizzards.png","zombie.png"
-  ]},
-  { name: "head", files: [
-    "cap.png","wizard.png","afro.png","blonde.png",
-    "cowboy.png","dave.png","hair.png","ketchup.png",
-    "mask.png","mchat.png","meebit.png","note.png",
-    "punk.png","tophat.png","vampire.png"
-  ]},
-  { name: "mouth", files: [
-    "baby.png","braces.png","bro.png","bunny.png","car.png",
-    "cheer.png","chew.png","chin.png","clown.png","cute.png",
-    "cutesmile.png","drool.png","feef.png","fishlips.png",
-    "flabergasted.png","froglip.png","frown.png","gb.png",
-    "grind.png","hm.png","laugh.png","line.png","lips.png",
-    "lipstick.png","lipsy.png","lipsy2.png","longsmile.png",
-    "moustache.png","nervous.png","oh.png","old.png","pika.png",
-    "pipe.png","puff.png","redbeard.png","smile.png",
-    "smug.png","toothless.png","whistle.png","yell.png","zombie.png"
-  ]},
-  { name: "eyes", files: [
-    "3dglasses.png","anime.png","blank.png","buttons.png","cool.png",
-    "cyclop.png","eyepatch.png","fury.png","glasses.png","googly.png",
-    "happy.png","heartshape.png","heavy.png","holes.png","jaded.png",
-    "laser.png","mad.png","nerd.png","paranoid.png","pepe.png",
-    "pure.png","rule-one.png","sleep.png","sunglasses.png",
-    "surprised.png","sus.png","swirl.png","tear.png",
-    "third-eye.png","thug.png","tired.png","wink.png","x.png","yes.png"
-  ]}
+
+{ name:"background", files:["blue.png","green.png","pink.png"] },
+
+{ name:"base", files:["base.png"], fixed:true },
+
+{ name:"body", files:[
+"artist.png","broken.png","buffed.png","candle.png",
+"goldchain.png","joe.png","killcheeto.png","leatherjacket.png",
+"leonidas.png","mets.png","omg.png","rekt.png",
+"shirt.png","tibbir.png","turtleneck.png",
+"tux.png","wizzards.png","zombie.png"
+]},
+
+{ name:"head", files:[
+"cap.png","wizard.png","afro.png","blonde.png",
+"cowboy.png","dave.png","hair.png","ketchup.png",
+"mask.png","mchat.png","meebit.png","note.png",
+"punk.png","tophat.png","vampire.png"
+]},
+
+{ name:"mouth", files:[
+"baby.png","braces.png","bro.png","bunny.png","car.png",
+"cheer.png","chew.png","chin.png","clown.png","cute.png",
+"cutesmile.png","drool.png","feef.png","fishlips.png",
+"flabergasted.png","froglip.png","frown.png","gb.png",
+"grind.png","hm.png","laugh.png","line.png","lips.png",
+"lipstick.png","lipsy.png","lipsy2.png","longsmile.png",
+"moustache.png","nervous.png","oh.png","old.png","pika.png",
+"pipe.png","puff.png","redbeard.png","smile.png",
+"smug.png","toothless.png","whistle.png","yell.png","zombie.png"
+]},
+
+{ name:"eyes", files:[
+"3dglasses.png","anime.png","blank.png","buttons.png","cool.png",
+"cyclop.png","eyepatch.png","fury.png","glasses.png","googly.png",
+"happy.png","heartshape.png","heavy.png","holes.png","jaded.png",
+"laser.png","mad.png","nerd.png","paranoid.png","pepe.png",
+"pure.png","rule-one.png","sleep.png","sunglasses.png",
+"surprised.png","sus.png","swirl.png","tear.png",
+"third-eye.png","thug.png","tired.png","wink.png","x.png","yes.png"
+]}
+
 ];
 
 /* ==========================
-NEW EXCLUSION ENGINE
+EXCLUSION RULES
 ========================== */
 
-function applyRules(selection) {
+const EXCLUSIONS = {
 
-  // head/note → remove mouth + eyes
-  if (selection.head === "note.png") {
-    delete selection.mouth;
-    delete selection.eyes;
-  }
+"head/note.png":[
+"mouth",
+"eyes"
+],
 
-  if (selection.eyes === "eyepatch.png") {
-    if (["blonde.png","dave.png","afro.png"].includes(selection.head)) return true;
-  }
+"eyes/googly.png":[
+"head/blonde.png"
+],
 
-  if (selection.eyes === "pepe.png" && selection.head === "dave.png") return true;
-  if (selection.eyes === "rule-one.png" && selection.head === "dave.png") return true;
-  if (selection.eyes === "sunglasses.png" && selection.head === "afro.png") return true;
+"eyes/eyepatch.png":[
+"head/blonde.png",
+"head/dave.png",
+"head/afro.png",
+"head/hair.png"
+],
 
-  if (selection.eyes === "3dglasses.png") {
-    if (["afro.png","blonde.png"].includes(selection.head)) return true;
-  }
+"eyes/pepe.png":[
+"head/dave.png"
+],
 
-  if (selection.eyes === "swirl.png") {
-    if (["afro.png","blonde.png"].includes(selection.head)) return true;
-  }
+"eyes/rule-one.png":[
+"head/dave.png"
+],
 
-  if (selection.head === "meebit.png") {
-    delete selection.eyes;
-    delete selection.mouth;
-    if (selection.body === "turtleneck.png") return true;
-  }
+"eyes/sunglasses.png":[
+"head/afro.png"
+],
 
-  if (selection.head === "mask.png") {
-    delete selection.eyes;
-    delete selection.mouth;
-  }
+"eyes/3dglasses.png":[
+"head/afro.png",
+"head/blonde.png"
+],
 
-  if (selection.mouth === "redbeard.png") {
-    if ([
-      "rekt.png","leonidas.png","shirt.png",
-      "candle.png","joe.png","omg.png"
-    ].includes(selection.body)) return true;
+"eyes/swirl.png":[
+"head/afro.png",
+"head/blonde.png",
+"mouth/bro.png",
+"mouth/laugh.png",
+"mouth/cheer.png"
+],
 
-    if (selection.head === "afro.png") return true;
-  }
+"eyes/heartshape.png":[
+"mouth/laugh.png"
+],
 
-  if (selection.mouth === "longsmile.png") {
-    if (["afro.png","blonde.png"].includes(selection.head)) return true;
-  }
+"head/meebit.png":[
+"eyes",
+"mouth",
+"body/turtleneck.png"
+],
 
-  if (selection.mouth === "zombie.png") {
-    if (["joe.png","turtleneck.png"].includes(selection.body)) return true;
-  }
+"head/mask.png":[
+"eyes",
+"mouth"
+],
 
-  return false;
+"mouth/redbeard.png":[
+"body/rekt.png",
+"body/leonidas.png",
+"body/shirt.png",
+"head/blonde.png",
+"head/afro.png",
+"body/candle.png",
+"body/joe.png",
+"body/omg.png",
+"eyes/swirl.png"
+],
+
+"mouth/longsmile.png":[
+"head/afro.png",
+"head/blonde.png"
+],
+
+"mouth/zombie.png":[
+"body/joe.png",
+"body/turtleneck.png"
+],
+
+"mouth/smug.png":[
+"head/blonde.png"
+],
+
+"mouth/bg.png":[
+"head/blonde.png"
+]
+
+};
+
+/* ==========================
+RULE ENGINE
+========================== */
+
+function applyRules(selection){
+
+for(const layer in selection){
+
+const file=selection[layer];
+const key=`${layer}/${file}`;
+
+const rules=EXCLUSIONS[key];
+
+if(!rules) continue;
+
+for(const rule of rules){
+
+if(!rule.includes("/")){
+delete selection[rule];
+continue;
+}
+
+const [ruleLayer,ruleFile]=rule.split("/");
+
+if(selection[ruleLayer]===ruleFile){
+return true;
+}
+
+}
+
+}
+
+return false;
+
 }
 
 /* ==========================
-PERFORMANCE CACHE
+CACHE
 ========================== */
 
-const IMAGE_CACHE = {};
+const IMAGE_CACHE={};
 
-function randomItem(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+function randomItem(arr){
+return arr[Math.floor(Math.random()*arr.length)];
 }
 
 /* ==========================
 PRELOAD
 ========================== */
 
-async function preloadAll() {
-  const status = document.getElementById("status");
+async function preloadAll(){
 
-  const promises = [];
+const status=document.getElementById("status");
 
-  for (const layer of LAYERS) {
-    for (const file of layer.files) {
-      const key = `${layer.name}/${file}`;
-      const src = `${CDN_BASE}/${key}`;
+const promises=[];
 
-      promises.push(
-        new Promise((resolve) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => {
-            IMAGE_CACHE[key] = img;
-            resolve();
-          };
-          img.onerror = () => resolve();
-          img.src = src;
-        })
-      );
-    }
-  }
+for(const layer of LAYERS){
 
-  await Promise.all(promises);
-  status.innerText = "Ready.";
+for(const file of layer.files){
+
+const key=`${layer.name}/${file}`;
+const src=`${CDN_BASE}/${key}`;
+
+promises.push(new Promise(resolve=>{
+
+const img=new Image();
+
+img.crossOrigin="anonymous";
+
+img.onload=()=>{
+IMAGE_CACHE[key]=img;
+resolve();
+};
+
+img.onerror=()=>resolve();
+
+img.src=src;
+
+}));
+
+}
+
+}
+
+await Promise.all(promises);
+
+status.innerText="Ready.";
+
 }
 
 /* ==========================
 GENERATE
 ========================== */
 
-async function generatePFP() {
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+async function generatePFP(){
 
-  let selection;
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-  do {
-    selection = {};
-    for (const layer of LAYERS) {
-      selection[layer.name] = layer.fixed
-        ? layer.files[0]
-        : randomItem(layer.files);
-    }
-  } while (applyRules(selection));
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  for (const layer of LAYERS) {
-    const file = selection[layer.name];
-    if (!file) continue;
+let selection;
 
-    const key = `${layer.name}/${file}`;
-    const img = IMAGE_CACHE[key];
+do{
 
-    if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  }
+selection={};
 
-  console.log("TRAITS:", selection);
+for(const layer of LAYERS){
+
+selection[layer.name]=layer.fixed
+?layer.files[0]
+:randomItem(layer.files);
+
+}
+
+}while(applyRules(selection));
+
+for(const layer of LAYERS){
+
+const file=selection[layer.name];
+if(!file) continue;
+
+const key=`${layer.name}/${file}`;
+
+const img=IMAGE_CACHE[key];
+
+if(img){
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+}
+
+}
+
+console.log("TRAITS:",selection);
+
 }
 
 /* ==========================
 INIT
 ========================== */
 
-document.getElementById("generate").addEventListener("click", generatePFP);
+document.getElementById("generate")
+.addEventListener("click",generatePFP);
+
 preloadAll();
 
 </script>
